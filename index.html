@@ -119,20 +119,53 @@ const nextBtn = document.getElementById("nextBtn");
 /* ===== HELPERS ===== */
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 
+  /* ===== EXTRA HELPERS ===== */
+
+// vult een lijst met herhaling tot gewenst aantal
+function fillWithRepeat(pool, amount) {
+  let out = [];
+  while (out.length < amount) {
+    out = out.concat(shuffle(pool));
+  }
+  return out.slice(0, amount);
+}
+
+// voorkomt 2x dezelfde foto achter elkaar
+function preventConsecutiveDuplicates(list) {
+  for (let i = 1; i < list.length; i++) {
+    if (list[i].file === list[i - 1].file) {
+      for (let j = i + 1; j < list.length; j++) {
+        if (list[j].file !== list[i].file) {
+          [list[i], list[j]] = [list[j], list[i]];
+          break;
+        }
+      }
+    }
+  }
+  return list;
+}
+
 /* ===== START ===== */
 function start() {
   const legCount = Math.round(NUM_QUESTIONS * LEG_PERCENT);
   const nietCount = NUM_QUESTIONS - legCount;
 
-  const legSamples = shuffle(LEG_IMAGES).slice(0, legCount)
-    .map(f => ({ file: "leg/" + f, isLegionella: true }));
+  const legPool = LEG_IMAGES.map(f => ({
+    file: "leg/" + f,
+    isLegionella: true
+  }));
 
-  const nietSamples = shuffle(NIETLEG_IMAGES)
-    .flatMap(a => NIETLEG_IMAGES)
-    .slice(0, nietCount)
-    .map(f => ({ file: "nietleg/" + f, isLegionella: false }));
+  const nietPool = NIETLEG_IMAGES.map(f => ({
+    file: "nietleg/" + f,
+    isLegionella: false
+  }));
 
-  quizList = shuffle([...legSamples, ...nietSamples]);
+  const legSamples = fillWithRepeat(legPool, legCount);
+  const nietSamples = fillWithRepeat(nietPool, nietCount);
+
+  quizList = preventConsecutiveDuplicates(
+    shuffle([...legSamples, ...nietSamples])
+  );
 
   index = 0;
   correct = 0;
@@ -142,7 +175,6 @@ function start() {
 
   showQuestion();
 }
-
 /* ===== SHOW ===== */
 function showQuestion() {
   const item = quizList[index];
