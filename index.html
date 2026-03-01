@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Legionella Test</title>
+
+<style>
+body { font-family: system-ui, Arial, sans-serif; margin: 20px;}
+.card { max-width: 900px; margin: 0 auto; border: 1px solid #ddd; border-radius: 12px; padding: 16px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+button { padding: 10px 14px; border-radius: 10px; border: 1px solid #bbb; background: #f7f7f7; cursor: pointer; }
+button:hover{ background: #eee; }
+button.primary { background: #1f6feb; border-color: #1f6feb; color: white;}
+button.primary:hover { background: #1a5fd1; }
+button.yes { background: #1a7f37; border-color: #1a7f37; color: white; }
+button.no { background: #cf222e; border-color: #cf222e; color: white; }
+img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid #ddd; }
+.muted { color: #666; }
+.hidden { display: none; }
+.big { font-size: 1.1rem; }
+.spacer { height: 10px; }
+@media print {
+.no-print { display: none !important; }
+body { margin: 0; }
+.card { border: none; } 
+}
+</style>
+</head>
+
+<body>
+<div class="card">
+<h1>Legionella Beoordelingstest</h1>
+<p class="muted">
+Druk op Start. Per afbeelding kies je <b>Ja</b> (Legionella) of <b>Nee</b>.
+Aan het einde krijg je een score en die kun je printen.
+</p>
+
+<div id="setup" class="no-print">
+<div class="row">
+<button id="startBtn" class="primary">Start</button>
+<span id="info" class="muted"></span>
+</div>
+</div>
+
+<div id="quiz" class="hidden">
+<div class="row no-print">
+<div class="big"><b>Vraag:</b> <span id="progresText"></span></div>
+<div class="muted">Score: <span id="liveScore">0</span></div>
+</div>
+
+<div class="spacer"></div>
+<img id="sampleImg" alt="sample" />
+<div class="spacer"></div>
+
+<div class="big"><b>Is dit Legionella?</b></div>
+<div class="spacer"></div>
+
+<div class="row no-print">
+<button id="yesBtn" class="yes">Ja</button>
+<button id="noBtn" class="no">Nee</button>
+</div>
+
+<div class="spacer"></div>
+<div id="feedback" class="muted"></div>
+</div>
+
+<div id="result" class="hidden">
+<h2>Resultaat</h2>
+<p class="big">
+Je score: <b><span id="finalCorrect">0</span></b> /
+<b><span id="finalTotal">0</span></b>
+(<b><span id="finalPercent">0</span>%</b>)
+</p>
+
+<details class="no-print">
+<summary>Bekijk details per vraag</summary>
+<div id="detailList"></div>
+</details>
+
+<div class="no-print">
+<button id="printBtn">Print resultaat</button>
+<button id="restartBtn">Opnieuw</button>
+</div>
+</div>
+</div>
+
+<script>
+
+const NUM_QUESTIONS = 2;
+
+const SAMPLES = [
+{ file: "test1_true.jpg", isLegionella: true },
+{ file: "test2_false.jpg", isLegionella: false }
+];
+
+const setupEl = document.getElementById("setup");
+const quizEl = document.getElementById("quiz");
+const resultEl = document.getElementById("result");
+
+const startBtn = document.getElementById("startBtn");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const printBtn = document.getElementById("printBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+const infoEl = document.getElementById("info");
+const progressTextEl = document.getElementById("progresText");
+const liveScoreEl = document.getElementById("liveScore");
+const imgEl = document.getElementById("sampleImg");
+const feedbackEl = document.getElementById("feedback");
+
+const finalCorrectEl = document.getElementById("finalCorrect");
+const finalTotalEl = document.getElementById("finalTotal");
+const finalPercentEl = document.getElementById("finalPercent");
+const detailListEl = document.getElementById("detailList");
+
+let quizList = [];
+let index = 0;
+let correct = 0;
+let answers = [];
+
+infoEl.textContent = `Beschikbare samples: ${SAMPLES.length}. Ingesteld: ${NUM_QUESTIONS}.`;
+
+function shuffle(array) {
+return [...array].sort(() => Math.random() - 0.5);
+}
+
+function start() {
+quizList = shuffle(SAMPLES).slice(0, NUM_QUESTIONS);
+index = 0;
+correct = 0;
+answers = [];
+liveScoreEl.textContent = "0";
+feedbackEl.textContent = "";
+
+setupEl.classList.add("hidden");
+resultEl.classList.add("hidden");
+quizEl.classList.remove("hidden");
+
+showQuestion();
+}
+
+function showQuestion() {
+const total = quizList.length;
+const item = quizList[index];
+
+progressTextEl.textContent = `${index + 1} / ${total}`;
+imgEl.src = "./images/" + item.file;   // ✅ FIX
+imgEl.alt = item.file;
+}
+
+function answer(userSaysLegionella) {
+const item = quizList[index];
+const wasCorrect = userSaysLegionella === item.isLegionella;
+
+if (wasCorrect) correct++;
+liveScoreEl.textContent = correct;
+
+answers.push({
+file: item.file,
+truth: item.isLegionella,
+user: userSaysLegionella,
+wasCorrect: wasCorrect
+});
+
+feedbackEl.textContent = wasCorrect
+? "✔️ Correct"
+: `❌ Fout (juist antwoord was: ${item.isLegionella ? "Ja" : "Nee"})`;
+
+index++;
+
+setTimeout(() => {
+if (index >= quizList.length) finish();
+else showQuestion();
+}, 500);
+}
+
+function finish() {
+quizEl.classList.add("hidden");
+resultEl.classList.remove("hidden");
+
+const total = quizList.length;
+const percent = Math.round((correct / total) * 100);
+
+finalCorrectEl.textContent = correct;
+finalTotalEl.textContent = total;
+finalPercentEl.textContent = percent;
+
+detailListEl.innerHTML = "";
+const ul = document.createElement("ul");
+
+for (const a of answers) {
+const li = document.createElement("li");
+li.textContent =
+`${a.file} - waarheid: ${a.truth ? "Ja" : "Nee"} - jij: ${a.user ? "Ja" : "Nee"} - ${a.wasCorrect ? "Correct" : "Fout"}`;
+ul.appendChild(li);
+}
+
+detailListEl.appendChild(ul);
+}
+
+startBtn.addEventListener("click", start);
+yesBtn.addEventListener("click", () => answer(true));
+noBtn.addEventListener("click", () => answer(false));
+printBtn.addEventListener("click", () => window.print());
+restartBtn.addEventListener("click", start);
+
+</script>
+</body>
+</html>
