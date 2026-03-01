@@ -21,79 +21,99 @@ img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid #ddd
 .big { font-size: 1.1rem; }
 .spacer { height: 10px; }
 @media print {
-.no-print { display: none !important; }
-body { margin: 0; }
-.card { border: none; } 
+  .no-print { display: none !important; }
+  body { margin: 0; }
+  .card { border: none; }
 }
 </style>
 </head>
 
 <body>
 <div class="card">
+
 <h1>Legionella Beoordelingstest</h1>
 <p class="muted">
 Druk op Start. Per afbeelding kies je <b>Ja</b> (Legionella) of <b>Nee</b>.
 Aan het einde krijg je een score en die kun je printen.
 </p>
 
+<!-- START -->
 <div id="setup" class="no-print">
-<div class="row">
-<button id="startBtn" class="primary">Start</button>
-<span id="info" class="muted"></span>
-</div>
+  <div class="row">
+    <button id="startBtn" class="primary">Start</button>
+    <span id="info" class="muted"></span>
+  </div>
 </div>
 
+<!-- QUIZ -->
 <div id="quiz" class="hidden">
-<div class="row no-print">
-<div class="big"><b>Vraag:</b> <span id="progresText"></span></div>
-<div class="muted">Score: <span id="liveScore">0</span></div>
+  <div class="row no-print">
+    <div class="big"><b>Vraag:</b> <span id="progressText"></span></div>
+    <div class="muted">Score: <span id="liveScore">0</span></div>
+  </div>
+
+  <div class="spacer"></div>
+  <img id="sampleImg" alt="sample" />
+  <div class="spacer"></div>
+
+  <div class="big"><b>Is dit Legionella?</b></div>
+  <div class="spacer"></div>
+
+  <div class="row no-print">
+    <button id="yesBtn" class="yes">Ja</button>
+    <button id="noBtn" class="no">Nee</button>
+  </div>
+
+  <div class="spacer"></div>
+  <div id="feedback" class="muted"></div>
 </div>
 
-<div class="spacer"></div>
-<img id="sampleImg" alt="sample" />
-<div class="spacer"></div>
-
-<div class="big"><b>Is dit Legionella?</b></div>
-<div class="spacer"></div>
-
-<div class="row no-print">
-<button id="yesBtn" class="yes">Ja</button>
-<button id="noBtn" class="no">Nee</button>
-</div>
-
-<div class="spacer"></div>
-<div id="feedback" class="muted"></div>
-</div>
-
+<!-- RESULT -->
 <div id="result" class="hidden">
-<h2>Resultaat</h2>
-<p class="big">
-Je score: <b><span id="finalCorrect">0</span></b> /
-<b><span id="finalTotal">0</span></b>
-(<b><span id="finalPercent">0</span>%</b>)
-</p>
+  <h2>Resultaat</h2>
+  <p class="big">
+    Je score:
+    <b><span id="finalCorrect">0</span></b> /
+    <b><span id="finalTotal">0</span></b>
+    (<b><span id="finalPercent">0</span>%</b>)
+  </p>
 
-<details class="no-print">
-<summary>Bekijk details per vraag</summary>
-<div id="detailList"></div>
-</details>
+  <details class="no-print">
+    <summary>Bekijk details per vraag</summary>
+    <div id="detailList"></div>
+  </details>
 
-<div class="no-print">
-<button id="printBtn">Print resultaat</button>
-<button id="restartBtn">Opnieuw</button>
+  <div class="no-print">
+    <button id="printBtn">Print resultaat</button>
+    <button id="restartBtn">Opnieuw</button>
+  </div>
 </div>
-</div>
+
 </div>
 
 <script>
+// ================= CONFIG =================
+const NUM_QUESTIONS = 10;
 
-const NUM_QUESTIONS = 2;
-
-const SAMPLES = [
-{ file: "test1_true.jpg", isLegionella: true },
-{ file: "test2_false.jpg", isLegionella: false }
+// PAS DEZE LIJSTEN AAN AAN JE BESTANDEN
+const LEG_IMAGES = [
+  "leg1.jpg","leg2.jpg","leg3.jpg","leg4.jpg","leg5.jpg",
+  "leg6.jpg","leg7.jpg","leg8.jpg","leg9.jpg","leg10.jpg","leg11.jpg"
 ];
 
+const NIETLEG_IMAGES = [
+  "niet1.jpg","niet2.jpg","niet3.jpg","niet4.jpg"
+];
+
+// =========================================
+
+// maak samples automatisch
+const SAMPLES = [
+  ...LEG_IMAGES.map(f => ({ file: "leg/" + f, isLegionella: true })),
+  ...NIETLEG_IMAGES.map(f => ({ file: "nietleg/" + f, isLegionella: false }))
+];
+
+// elementen
 const setupEl = document.getElementById("setup");
 const quizEl = document.getElementById("quiz");
 const resultEl = document.getElementById("result");
@@ -105,7 +125,7 @@ const printBtn = document.getElementById("printBtn");
 const restartBtn = document.getElementById("restartBtn");
 
 const infoEl = document.getElementById("info");
-const progressTextEl = document.getElementById("progresText");
+const progressTextEl = document.getElementById("progressText");
 const liveScoreEl = document.getElementById("liveScore");
 const imgEl = document.getElementById("sampleImg");
 const feedbackEl = document.getElementById("feedback");
@@ -115,6 +135,7 @@ const finalTotalEl = document.getElementById("finalTotal");
 const finalPercentEl = document.getElementById("finalPercent");
 const detailListEl = document.getElementById("detailList");
 
+// state
 let quizList = [];
 let index = 0;
 let correct = 0;
@@ -122,90 +143,98 @@ let answers = [];
 
 infoEl.textContent = `Beschikbare samples: ${SAMPLES.length}. Ingesteld: ${NUM_QUESTIONS}.`;
 
-function shuffle(array) {
-return [...array].sort(() => Math.random() - 0.5);
+// helpers
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
+// start quiz
 function start() {
-quizList = shuffle(SAMPLES).slice(0, NUM_QUESTIONS);
-index = 0;
-correct = 0;
-answers = [];
-liveScoreEl.textContent = "0";
-feedbackEl.textContent = "";
+  quizList = shuffle(SAMPLES).slice(0, NUM_QUESTIONS);
+  index = 0;
+  correct = 0;
+  answers = [];
 
-setupEl.classList.add("hidden");
-resultEl.classList.add("hidden");
-quizEl.classList.remove("hidden");
+  liveScoreEl.textContent = "0";
+  feedbackEl.textContent = "";
 
-showQuestion();
+  setupEl.classList.add("hidden");
+  resultEl.classList.add("hidden");
+  quizEl.classList.remove("hidden");
+
+  showQuestion();
 }
 
+// show question
 function showQuestion() {
-const total = quizList.length;
-const item = quizList[index];
-
-progressTextEl.textContent = `${index + 1} / ${total}`;
-imgEl.src = "./images/" + item.file;   // ✅ FIX
-imgEl.alt = item.file;
+  const item = quizList[index];
+  progressTextEl.textContent = `${index + 1} / ${quizList.length}`;
+  imgEl.src = "./images/" + item.file;
+  imgEl.alt = item.file;
 }
 
+// answer
 function answer(userSaysLegionella) {
-const item = quizList[index];
-const wasCorrect = userSaysLegionella === item.isLegionella;
+  const item = quizList[index];
+  const wasCorrect = userSaysLegionella === item.isLegionella;
 
-if (wasCorrect) correct++;
-liveScoreEl.textContent = correct;
+  if (wasCorrect) correct++;
+  liveScoreEl.textContent = correct;
 
-answers.push({
-file: item.file,
-truth: item.isLegionella,
-user: userSaysLegionella,
-wasCorrect: wasCorrect
-});
+  answers.push({
+    file: item.file,
+    truth: item.isLegionella,
+    user: userSaysLegionella,
+    wasCorrect
+  });
 
-feedbackEl.textContent = wasCorrect
-? "✔️ Correct"
-: `❌ Fout (juist antwoord was: ${item.isLegionella ? "Ja" : "Nee"})`;
+  feedbackEl.textContent = wasCorrect
+    ? "✔️ Correct"
+    : `❌ Fout (juist antwoord was: ${item.isLegionella ? "Ja" : "Nee"})`;
 
-index++;
+  index++;
 
-setTimeout(() => {
-if (index >= quizList.length) finish();
-else showQuestion();
-}, 500);
+  setTimeout(() => {
+    if (index >= quizList.length) finish();
+    else showQuestion();
+  }, 500);
 }
 
+// finish
 function finish() {
-quizEl.classList.add("hidden");
-resultEl.classList.remove("hidden");
+  quizEl.classList.add("hidden");
+  resultEl.classList.remove("hidden");
 
-const total = quizList.length;
-const percent = Math.round((correct / total) * 100);
+  const total = quizList.length;
+  const percent = Math.round((correct / total) * 100);
 
-finalCorrectEl.textContent = correct;
-finalTotalEl.textContent = total;
-finalPercentEl.textContent = percent;
+  finalCorrectEl.textContent = correct;
+  finalTotalEl.textContent = total;
+  finalPercentEl.textContent = percent;
 
-detailListEl.innerHTML = "";
-const ul = document.createElement("ul");
+  detailListEl.innerHTML = "";
+  const ul = document.createElement("ul");
 
-for (const a of answers) {
-const li = document.createElement("li");
-li.textContent =
-`${a.file} - waarheid: ${a.truth ? "Ja" : "Nee"} - jij: ${a.user ? "Ja" : "Nee"} - ${a.wasCorrect ? "Correct" : "Fout"}`;
-ul.appendChild(li);
+  for (const a of answers) {
+    const li = document.createElement("li");
+    li.textContent =
+      `${a.file} – waarheid: ${a.truth ? "Ja" : "Nee"} – jij: ${a.user ? "Ja" : "Nee"} – ${a.wasCorrect ? "Correct" : "Fout"}`;
+    ul.appendChild(li);
+  }
+
+  detailListEl.appendChild(ul);
 }
 
-detailListEl.appendChild(ul);
-}
-
+// events
 startBtn.addEventListener("click", start);
 yesBtn.addEventListener("click", () => answer(true));
 noBtn.addEventListener("click", () => answer(false));
 printBtn.addEventListener("click", () => window.print());
 restartBtn.addEventListener("click", start);
+</script>
 
+</body>
+</html>
 </script>
 </body>
 </html>
