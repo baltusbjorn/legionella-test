@@ -89,7 +89,6 @@ Aan het einde krijg je een score en die kun je printen.
 <script>
 /* ===== CONFIG ===== */
 const NUM_QUESTIONS = 25;
-const LEG_PERCENT = 0.7;
 
 /* ===== IMAGES ===== */
 const LEG_IMAGES = [
@@ -147,7 +146,11 @@ function preventConsecutiveDuplicates(list) {
 
 /* ===== START ===== */
 function start() {
-  const legCount = Math.round(NUM_QUESTIONS * LEG_PERCENT);
+  const minLeg = Math.ceil(NUM_QUESTIONS * 0.3);
+const maxLeg = Math.floor(NUM_QUESTIONS * 0.7);
+
+const legCount =
+  Math.floor(Math.random() * (maxLeg - minLeg + 1)) + minLeg;
   const nietCount = NUM_QUESTIONS - legCount;
 
   const legPool = LEG_IMAGES.map(f => ({
