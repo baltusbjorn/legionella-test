@@ -24,6 +24,26 @@ img {
   border: 1px solid #ddd;
 }
 
+#sampleImg {
+  cursor: zoom-in;
+}
+
+#zoomBox {
+  position: fixed;
+  width: 220px;
+  height: 220px;
+  border: 2px solid #333;
+  border-radius: 12px;
+  background-repeat: no-repeat;
+  background-size: 300%;
+  background-position: center;
+  pointer-events: none;
+  display: none;
+  z-index: 9999;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+  background-color: white;
+}
+  
 .muted { color: #666; }
 .hidden { display: none; }
 .big { font-size: 1.1rem; }
@@ -58,7 +78,9 @@ Aan het einde krijg je een score en die kun je printen.
 
   <div class="spacer"></div>
   <img id="sampleImg" />
-  <div class="spacer"></div>
+<div id="zoomBox"></div>
+<div class="spacer"></div>
+  
 
   <div class="big"><b>Is dit Legionella?</b></div>
 
@@ -163,6 +185,7 @@ const quizEl = document.getElementById("quiz");
 const resultEl = document.getElementById("result");
 const progressTextEl = document.getElementById("progressText");
 const liveScoreEl = document.getElementById("liveScore");
+const zoomBox = document.getElementById("zoomBox");
 const imgEl = document.getElementById("sampleImg");
 const feedbackEl = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
@@ -324,7 +347,28 @@ startBtn.onclick = start;
 document.getElementById("yesBtn").onclick = () => answer(true);
 document.getElementById("noBtn").onclick = () => answer(false);
 nextBtn.onclick = nextQuestion;
+imgEl.addEventListener("mousemove", function(e) {
+  const rect = imgEl.getBoundingClientRect();
+
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  const xPercent = (x / rect.width) * 100;
+  const yPercent = (y / rect.height) * 100;
+
+  zoomBox.style.display = "block";
+  zoomBox.style.left = (e.clientX + 20) + "px";
+  zoomBox.style.top = (e.clientY + 20) + "px";
+  zoomBox.style.backgroundImage = `url("${imgEl.src}")`;
+  zoomBox.style.backgroundPosition = `${xPercent}% ${yPercent}%`;
+});
+
+imgEl.addEventListener("mouseleave", function() {
+  zoomBox.style.display = "none";
+});
 </script>
 
+
+  
 </body>
 </html>
