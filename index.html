@@ -166,6 +166,7 @@ const liveScoreEl = document.getElementById("liveScore");
 const imgEl = document.getElementById("sampleImg");
 const feedbackEl = document.getElementById("feedback");
 const nextBtn = document.getElementById("nextBtn");
+const startBtn = document.getElementById("startBtn");
 
 /* ===== HELPERS ===== */
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
@@ -205,6 +206,9 @@ function getPopupText(text) {
 
 /* ===== START ===== */
 function start() {
+  startBtn.textContent = "Opnieuw";
+  startBtn.classList.add("hidden");
+
   const minLeg = Math.ceil(NUM_QUESTIONS * 0.3);
   const maxLeg = Math.floor(NUM_QUESTIONS * 0.7);
 
@@ -306,6 +310,9 @@ function finish() {
   quizEl.classList.add("hidden");
   resultEl.classList.remove("hidden");
 
+  startBtn.textContent = "Opnieuw";
+  startBtn.classList.remove("hidden");
+
   document.getElementById("finalCorrect").textContent = correct;
   document.getElementById("finalTotal").textContent = quizList.length;
   document.getElementById("finalPercent").textContent =
@@ -313,7 +320,7 @@ function finish() {
 }
 
 /* ===== EVENTS ===== */
-document.getElementById("startBtn").onclick = start;
+startBtn.onclick = start;
 document.getElementById("yesBtn").onclick = () => answer(true);
 document.getElementById("noBtn").onclick = () => answer(false);
 nextBtn.onclick = nextQuestion;
