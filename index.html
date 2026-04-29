@@ -159,10 +159,11 @@ const legCount =
     isLegionella: true
   }));
 
-  const nietPool = NIETLEG_IMAGES.map(f => ({
-    file: "nietleg/" + f,
-    isLegionella: false
-  }));
+ const nietPool = NIETLEG_IMAGES.map(img => ({
+  file: "nietleg/" + img.file,
+  isLegionella: false,
+  popup: img.popup && img.popup.trim() !== "" ? img.popup : "Deze is wel verdacht"
+}));
 
   const legSamples = fillWithRepeat(legPool, legCount);
   const nietSamples = fillWithRepeat(nietPool, nietCount);
@@ -207,11 +208,17 @@ function answer(userAnswer) {
   } else {
     feedbackEl.textContent = "✔️ Correct";
 
-    // Als het eigenlijk niet verdacht is, maar gebruiker kiest wel Verdacht
+    // Alleen popup bij NIET verdachte afbeeldingen
+    // En alleen als gebruiker toch "Verdacht" kiest
     if (item.isLegionella === false && userAnswer === true) {
-      alert("Deze afbeelding is eigenlijk niet verdacht.");
+      alert(item.popup);
     }
   }
+
+  liveScoreEl.textContent = correct;
+  currentAnswered = true;
+  nextBtn.classList.remove("hidden");
+}
 
 /* ===== NEXT ===== */
 function nextQuestion() {
