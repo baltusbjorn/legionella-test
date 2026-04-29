@@ -42,7 +42,7 @@ img {
 
 <h1>Legionella Beoordelingstest</h1>
 <p class="muted">
-Druk op Start. Per afbeelding kies je <b>Verdacht</b> (Legionella) of <b>Nee</b>.
+Druk op Start. Per afbeelding kies je <b>Verdacht</b> (Legionella) of <b>Niet Verdacht</b>.
 Aan het einde krijg je een score en die kun je printen.
 </p>
   
@@ -64,7 +64,7 @@ Aan het einde krijg je een score en die kun je printen.
 
   <div class="row no-print">
     <button id="yesBtn" class="yes">Verdacht</button>
-    <button id="noBtn" class="no">Nee</button>
+    <button id="noBtn" class="no">Niet Verdacht</button>
     <button id="nextBtn" class="next hidden">Next</button>
   </div>
 
@@ -202,7 +202,7 @@ function answer(userAnswer) {
 
   feedbackEl.textContent = ok
     ? "✔️ Correct"
-    : `❌ Fout (juist antwoord: ${item.isLegionella ? "Verdacht" : "Nee"})`;
+    : `❌ Fout (juist antwoord: ${item.isLegionella ? "Verdacht" : "Niet Verdacht"})`;
 
   liveScoreEl.textContent = correct;
   currentAnswered = true;
