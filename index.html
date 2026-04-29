@@ -17,7 +17,7 @@ button.no { background: #cf222e; border-color: #cf222e; color: white; }
 button.next { background: #6e7781; border-color: #6e7781; color: white; }
 
 img {
-  max-width: 50%;   /* 🔹 50% kleiner */
+  max-width: 50%;
   display: block;
   margin: 0 auto;
   border-radius: 10px;
@@ -42,7 +42,7 @@ img {
 
 <h1>Legionella Beoordelingstest</h1>
 <p class="muted">
-Druk op Start. Per afbeelding kies je <b>Verdacht</b> (Legionella) of <b>Niet Verdacht</b>.
+Druk op Start. Per afbeelding kies je <b>Verdacht</b> of <b>Niet Verdacht</b>.
 Aan het einde krijg je een score en die kun je printen.
 </p>
   
@@ -90,15 +90,66 @@ Aan het einde krijg je een score en die kun je printen.
 /* ===== CONFIG ===== */
 const NUM_QUESTIONS = 25;
 
-/* ===== IMAGES ===== */
+/* ===== VERDACHTE IMAGES ===== */
 const LEG_IMAGES = [
-  "leg1.jpg","leg2.jpg","leg3.jpg","leg4.jpg","leg5.jpg","leg6.jpg","leg7.jpg","leg8.jpg","leg9.jpg","leg10.jpg","leg11.jpg","leg12.jpg","leg13.jpg","leg14.jpg","leg15.jpg","leg16.jpg","leg17.jpg","leg18.jpg","leg19.jpg",
+  "leg1.jpg",
+  "leg2.jpg",
+  "leg3.jpg",
+  "leg4.jpg",
+  "leg5.jpg",
+  "leg6.jpg",
+  "leg7.jpg",
+  "leg8.jpg",
+  "leg9.jpg",
+  "leg10.jpg",
+  "leg11.jpg",
+  "leg12.jpg",
+  "leg13.jpg",
+  "leg14.jpg",
+  "leg15.jpg",
+  "leg16.jpg",
+  "leg17.jpg",
+  "leg18.jpg",
+  "leg19.jpg"
 ];
 
+/* ===== NIET VERDACHTE IMAGES + POPUPTEKST ===== */
+/*
+  Vul bij popup je eigen tekst in.
+
+  Voorbeeld:
+  { file: "niet1.jpg", popup: "Deze lijkt verdacht, maar is geen Legionella." }
+
+  Laat je popup leeg, dus popup: "",
+  dan gebruikt hij automatisch:
+  "Deze is wel verdacht"
+*/
 const NIETLEG_IMAGES = [
-  "niet1.jpg","niet2.jpg","niet3.jpg","niet4.jpg","niet5.jpg","niet6.jpg","niet7.jpg","niet8.jpg","niet9.jpg","niet10.jpg"
-  ,"niet11.jpg","niet12.jpg","niet13.jpg","niet14.jpg","niet15.jpg","niet16.jpg","niet17.jpg","niet18.jpg","niet19.jpg","niet20.jpg"
-  ,"niet21.jpg","niet22.jpg","niet23.jpg","niet24.jpg","niet25.jpg"
+  { file: "niet1.jpg", popup: "" },
+  { file: "niet2.jpg", popup: "" },
+  { file: "niet3.jpg", popup: "" },
+  { file: "niet4.jpg", popup: "" },
+  { file: "niet5.jpg", popup: "" },
+  { file: "niet6.jpg", popup: "" },
+  { file: "niet7.jpg", popup: "" },
+  { file: "niet8.jpg", popup: "" },
+  { file: "niet9.jpg", popup: "" },
+  { file: "niet10.jpg", popup: "" },
+  { file: "niet11.jpg", popup: "" },
+  { file: "niet12.jpg", popup: "" },
+  { file: "niet13.jpg", popup: "" },
+  { file: "niet14.jpg", popup: "" },
+  { file: "niet15.jpg", popup: "" },
+  { file: "niet16.jpg", popup: "" },
+  { file: "niet17.jpg", popup: "" },
+  { file: "niet18.jpg", popup: "" },
+  { file: "niet19.jpg", popup: "" },
+  { file: "niet20.jpg", popup: "" },
+  { file: "niet21.jpg", popup: "" },
+  { file: "niet22.jpg", popup: "" },
+  { file: "niet23.jpg", popup: "" },
+  { file: "niet24.jpg", popup: "" },
+  { file: "niet25.jpg", popup: "" }
 ];
 
 /* ===== STATE ===== */
@@ -119,9 +170,7 @@ const nextBtn = document.getElementById("nextBtn");
 /* ===== HELPERS ===== */
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 
-  /* ===== EXTRA HELPERS ===== */
-
-// vult een lijst met herhaling tot gewenst aantal
+// Vult een lijst met herhaling tot gewenst aantal
 function fillWithRepeat(pool, amount) {
   let out = [];
   while (out.length < amount) {
@@ -130,7 +179,7 @@ function fillWithRepeat(pool, amount) {
   return out.slice(0, amount);
 }
 
-// voorkomt 2x dezelfde foto achter elkaar
+// Voorkomt 2x dezelfde foto achter elkaar
 function preventConsecutiveDuplicates(list) {
   for (let i = 1; i < list.length; i++) {
     if (list[i].file === list[i - 1].file) {
@@ -145,25 +194,36 @@ function preventConsecutiveDuplicates(list) {
   return list;
 }
 
+// Geeft eigen popuptekst terug.
+// Als popup leeg is, komt standaardtekst.
+function getPopupText(text) {
+  if (text && text.trim() !== "") {
+    return text;
+  }
+  return "Deze is wel verdacht";
+}
+
 /* ===== START ===== */
 function start() {
   const minLeg = Math.ceil(NUM_QUESTIONS * 0.3);
-const maxLeg = Math.floor(NUM_QUESTIONS * 0.7);
+  const maxLeg = Math.floor(NUM_QUESTIONS * 0.7);
 
-const legCount =
-  Math.floor(Math.random() * (maxLeg - minLeg + 1)) + minLeg;
+  const legCount =
+    Math.floor(Math.random() * (maxLeg - minLeg + 1)) + minLeg;
+
   const nietCount = NUM_QUESTIONS - legCount;
 
   const legPool = LEG_IMAGES.map(f => ({
     file: "leg/" + f,
-    isLegionella: true
+    isLegionella: true,
+    popup: ""
   }));
 
- const nietPool = NIETLEG_IMAGES.map(img => ({
-  file: "nietleg/" + img.file,
-  isLegionella: false,
-  popup: img.popup && img.popup.trim() !== "" ? img.popup : "Deze is wel verdacht"
-}));
+  const nietPool = NIETLEG_IMAGES.map(img => ({
+    file: "nietleg/" + img.file,
+    isLegionella: false,
+    popup: getPopupText(img.popup)
+  }));
 
   const legSamples = fillWithRepeat(legPool, legCount);
   const nietSamples = fillWithRepeat(nietPool, nietCount);
@@ -180,9 +240,11 @@ const legCount =
 
   showQuestion();
 }
+
 /* ===== SHOW ===== */
 function showQuestion() {
   const item = quizList[index];
+
   currentAnswered = false;
   nextBtn.classList.add("hidden");
   feedbackEl.textContent = "";
@@ -198,10 +260,18 @@ function answer(userAnswer) {
 
   const item = quizList[index];
 
-  // Alleen fout als het wél Legionella is, maar gebruiker kiest "Niet Verdacht"
+  /*
+    Puntentelling:
+    - Verdachte foto + gebruiker kiest Verdacht = goed
+    - Verdachte foto + gebruiker kiest Niet Verdacht = fout
+    - Niet verdachte foto + gebruiker kiest Niet Verdacht = goed
+    - Niet verdachte foto + gebruiker kiest Verdacht = ook goed, maar met popup
+  */
   const fout = item.isLegionella === true && userAnswer === false;
 
-  if (!fout) correct++;
+  if (!fout) {
+    correct++;
+  }
 
   if (fout) {
     feedbackEl.textContent = "❌ Fout (juist antwoord: Verdacht)";
@@ -223,8 +293,12 @@ function answer(userAnswer) {
 /* ===== NEXT ===== */
 function nextQuestion() {
   index++;
-  if (index >= quizList.length) finish();
-  else showQuestion();
+
+  if (index >= quizList.length) {
+    finish();
+  } else {
+    showQuestion();
+  }
 }
 
 /* ===== FINISH ===== */
