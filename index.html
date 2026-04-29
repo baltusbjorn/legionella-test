@@ -196,18 +196,22 @@ function answer(userAnswer) {
   if (currentAnswered) return;
 
   const item = quizList[index];
-  const ok = userAnswer === item.isLegionella;
 
-  if (ok) correct++;
+  // Alleen fout als het wél Legionella is, maar gebruiker kiest "Niet Verdacht"
+  const fout = item.isLegionella === true && userAnswer === false;
 
-  feedbackEl.textContent = ok
-    ? "✔️ Correct"
-    : `❌ Fout (juist antwoord: ${item.isLegionella ? "Verdacht" : "Niet Verdacht"})`;
+  if (!fout) correct++;
 
-  liveScoreEl.textContent = correct;
-  currentAnswered = true;
-  nextBtn.classList.remove("hidden");
-}
+  if (fout) {
+    feedbackEl.textContent = "❌ Fout (juist antwoord: Verdacht)";
+  } else {
+    feedbackEl.textContent = "✔️ Correct";
+
+    // Als het eigenlijk niet verdacht is, maar gebruiker kiest wel Verdacht
+    if (item.isLegionella === false && userAnswer === true) {
+      alert("Deze afbeelding is eigenlijk niet verdacht.");
+    }
+  }
 
 /* ===== NEXT ===== */
 function nextQuestion() {
